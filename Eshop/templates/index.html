@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div>
+    <h4>
+        {% if user.is_authenticated %}
+            {{ user }}{{ user.deposit }}
+        {% else %}
+            Guest
+        {%  endif %}
+    </h4>
+</div>
+
+<div>
+    {% if user.is_authenticated %}
+
+        {% for obj in object_list %}
+        <div>
+            {{ obj.title }}<br>
+            цена {{ obj.price }}uah <br>
+            в наличии {{ obj.amount }}шт. на складе
+            <form method="post" action="{% url 'byers' obj.id %}">
+            {% csrf_token %}
+            {{ form }}
+                <button type="submit">Bye</button>
+            </form>
+            <form method="get" action="{% url 'product-update' obj.id %}">
+            {% csrf_token %}
+                <button type="submit">Update</button>
+            </form>
+            <form method="post" action="{% url 'product-delete' obj.id %}">
+            {% csrf_token %}
+                <button type="submit">Delete</button>
+            </form>
+        </div><br>
+        {% endfor %}
+        <div>
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+        </div>
+        <br><a href="{% url 'product-create' %}">CREATE NEW PRODUCT</a>
+    {% else %}
+        Просьба сначала зарегестрирваться
+    {% endif %}
+
+</div>
+{% endblock %}

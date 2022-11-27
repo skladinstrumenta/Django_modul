@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Интернет-магазин</title>
+</head>
+<body>
+<div>
+    {% block header %}
+    <div><a href="{% url 'home' %}">Home</a></div>
+    <div><a href="{% url 'login' %}">Log In</a></div>
+    <div><a href="{% url 'logout' %}">Logout</a></div>
+    {% endblock %}
+</div>
+<div>
+   {% block content %}
+    {% endblock %}
+</div>
+
+</body>
+</html>

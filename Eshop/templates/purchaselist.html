@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{%  block content %}
+    {% for purc in object_list %}
+        {{ purc.product.title }} x {{ purc.amount }}шт. = {{ purc.purchase_sum }}<br>
+    {% endfor %}
+{% endblock %}
