@@ -4,16 +4,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LogoutView, LoginView
 from django.db import transaction
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView
 
-from Eshop.forms import UserCreateForm, PurchaseCreateForm, ProductCreateForm
-from Eshop.models import Product, Purchase, MyUser
-
-
-def index(request):
-    return render(request, "index.html")
+from Eshop.forms import UserCreateForm, PurchaseCreateForm, ProductCreateForm, ReturnCreateForm
+from Eshop.models import Product, Purchase, MyUser, Return
 
 
 class UserCreateView(CreateView):
@@ -30,7 +26,7 @@ class UserCreateView(CreateView):
         return valid
 
 
-class ProductListView(LoginRequiredMixin, ListView):
+class ProductListView(ListView):
     model = Product
     template_name = 'index.html'
     extra_context = {'form': PurchaseCreateForm, 'create_form': ProductCreateForm()}
@@ -46,11 +42,12 @@ class Login(LoginView):
 
 
 class Logout(LoginRequiredMixin, LogoutView):
-    next_page = 'index'
+    next_page = 'home'
     login_url = 'login/'
     success_url = reverse_lazy("purchaselist")
 
-class ByeProductCreateView(CreateView):
+
+class BuyProductCreateView(CreateView):
     form_class = PurchaseCreateForm
     template_name = "index.html"
     success_url = "/purchaselist"
@@ -82,7 +79,7 @@ class ByeProductCreateView(CreateView):
 
 
 class PurchaseListView(LoginRequiredMixin, ListView):
-    login_url = 'login/'
+    login_url = '/'
     model = Purchase
     template_name = 'purchaselist.html'
 
@@ -92,12 +89,6 @@ class PurchaseListView(LoginRequiredMixin, ListView):
             return queryset
         queryset = Purchase.objects.all()
         return queryset
-
-    def purchase_sum(self, *args, **kwargs):
-        object = Purchase.objects.get(id=self.request.id)
-        purchase_sum = int(object.price) * int(object.amount)
-        return purchase_sum
-
 
 
 class ProductCreateView(LoginRequiredMixin, CreateView):
@@ -114,12 +105,62 @@ class ProductUpdate(LoginRequiredMixin, UpdateView):
     model = Product
     fields = ['title', 'text', 'price', 'image', 'amount']
     template_name = 'updateproduct.html'
-    success_url = reverse_lazy('home')
-
-class ProductDeleteView(LoginRequiredMixin, DeleteView):
-    model = Product
     success_url = '/'
 
 
+class ReturnPurchaseCreateView(CreateView):
+    form_class = ReturnCreateForm
+    template_name = "purchaselist.html"
+    success_url = "/purchaselist"
 
+    def form_valid(self, form):
+        obj = form.save(commit=False)
+        purchase_id = self.kwargs.get('pk')
+        purchase = Purchase.objects.get(id=purchase_id)
+        purchase_time_on = timezone.now() - purchase.date_of_purchase
+        time_button_return = 180
+        if purchase_time_on.seconds > time_button_return:
+            messages.error(self.request, 'время подачи заявки на возврат ИСТЕКЛО')
+            return HttpResponseRedirect('/purchaselist')
+        obj.purchase = purchase
+        obj.save()
+        return super().form_valid(form)
+
+
+class ReturnListView(LoginRequiredMixin, ListView):
+    login_url = 'login/'
+    model = Return
+    template_name = 'returnpurchaselist.html'
+    extra_context = {'form': ReturnCreateForm}
+
+    def get_queryset(self):
+        if not self.request.user.is_superuser:
+            queryset = Return.objects.filter(purchase__user=self.request.user)
+            return queryset
+        queryset = Return.objects.all()
+        return queryset
+
+
+class DeletePurchaseView(DeleteView):
+    model = Purchase
+    success_url = '/returnpurchaselist'
+
+    def form_valid(self, form):
+        purc = self.get_object()
+        customer = purc.user
+        product = purc.product
+        customer.deposit += purc.total()
+        product.amount += purc.amount
+
+        with transaction.atomic():
+            customer.save()
+            product.save()
+            purc.delete()
+
+        return HttpResponseRedirect(self.success_url)
+
+
+class DeleteReturnView(DeleteView):
+    model = Return
+    success_url = '/returnpurchaselist'
 

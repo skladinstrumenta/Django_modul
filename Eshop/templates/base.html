@@ -2,17 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'eshop/css/all.css' %}">
     <title>Интернет-магазин</title>
 </head>
 <body>
-<div>
+<div class="header">
     {% block header %}
-    <div><a href="{% url 'home' %}">Home</a></div>
-    <div><a href="{% url 'login' %}">Log In</a></div>
-    <div><a href="{% url 'logout' %}">Logout</a></div>
+        {% if user.is_authenticated %}
+            <div><a href="{% url 'home' %}">Home</a></div>
+            <div><a href="{% url 'logout' %}">Logout</a></div>
+            <div><a href="{% url 'purchaselist' %}">Purchases</a></div>
+            <div><a href="{% url 'returnpurchaselist' %}">Returns purchases</a></div>
+
+            <div>
+                <h4>
+                    {% if not user.is_superuser %}
+                        {{ user }}<br>
+                         Кошелёк: {{ user.deposit }}
+                    {% else %}
+                        {{ user }}<br>
+                        ADMIN
+                    {% endif %}
+                </h4>
+            </div>
+
+        {% else %}
+            <div><a href="{% url 'home' %}">Home</a></div>
+            <div><a href="{% url 'login' %}">Log In</a></div>
+            <div><a href="{% url 'registration' %}">Sign up</a></div>
+
+            <div><h4>Guest</h4></div>
+        {%  endif %}
+        </div>
     {% endblock %}
 </div>
-<div>
+<div class="content">
    {% block content %}
     {% endblock %}
 </div>

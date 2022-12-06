@@ -1,38 +1,36 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div>
-    <h4>
-        {% if user.is_authenticated %}
-            {{ user }}{{ user.deposit }}
-        {% else %}
-            Guest
-        {%  endif %}
-    </h4>
-</div>
 
-<div>
-    {% if user.is_authenticated %}
-
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                    <div><span><strong>{{ message }}</strong></span></div>
+                {% endif %}
+            {% endfor %}
+<div class="product">
         {% for obj in object_list %}
-        <div>
-            {{ obj.title }}<br>
-            цена {{ obj.price }}uah <br>
-            в наличии {{ obj.amount }}шт. на складе
-            <form method="post" action="{% url 'byers' obj.id %}">
-            {% csrf_token %}
-            {{ form }}
-                <button type="submit">Bye</button>
-            </form>
-            <form method="get" action="{% url 'product-update' obj.id %}">
-            {% csrf_token %}
-                <button type="submit">Update</button>
-            </form>
-            <form method="post" action="{% url 'product-delete' obj.id %}">
-            {% csrf_token %}
-                <button type="submit">Delete</button>
-            </form>
-        </div><br>
+            <div class="object_product">
+                <div class="product_description">
+                    <h3>{{ obj.title }}</h3><br>
+                    ЦЕНА: {{ obj.price }}uah <br>
+                    В НАЛИЧИИ: {{ obj.amount }} шт.
+                    {% if user.is_authenticated and not user.is_superuser %}
+                        <form method="post" action="{% url 'buy' obj.id %}">
+                            {% csrf_token %}
+                            {{ form }}
+                            <button type="submit">Buy</button>
+                        </form>
+                    {% elif user.is_superuser %}
+                        <form method="get" action="{% url 'product-update' obj.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Update</button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="product_image">
+                    <img src="media/{{ obj.image }}" alt="product_image" width="150px">
+                </div>
+            </div><br>
         {% endfor %}
         <div>
         <span class="step-links">
@@ -49,12 +47,12 @@
                 <a href="?page={{ page_obj.next_page_number }}">next</a>
                 <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
             {% endif %}
-        </span>
+            </span>
         </div>
-        <br><a href="{% url 'product-create' %}">CREATE NEW PRODUCT</a>
-    {% else %}
-        Просьба сначала зарегестрирваться
-    {% endif %}
+        <br>
+{% if user.is_superuser %}
+    <a href="{% url 'product-create' %}">CREATE NEW PRODUCT</a>
+{% endif %}
 
 </div>
 {% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{%  block content %}
+    {% for return_obj in object_list %}
+
+        <br>
+        {% if user.is_authenticated %}
+            Наименование: {{ return_obj.purchase.product.title }}<br>
+            Kоличество: {{ return_obj.purchase.amount }}<br>
+            Дата заявки на возврат: {{ return_obj.date_return }}<br>
+            {% if user.is_superuser %}
+                <h5>Пользователь создавший заявку {{ return_obj.purchase.user }}</h5>
+                <h5>ID пользователя {{ return_obj.purchase.user.pk }}</h5>
+                <form method="post" action="{% url 'purchase-delete' return_obj.purchase.pk %}">
+                {% csrf_token %}
+                {{ form }}
+                <button type="submit">Подтвердить</button>
+                </form>
+                <form method="post" action="{% url 'delete-return' return_obj.id %}">
+                {% csrf_token %}
+                {{ form }}
+                <button type="submit">Отклонить</button>
+                </form>
+            {% endif %}
+            <hr>
+        {% endif %}
+    {% endfor %}
+{% endblock %}

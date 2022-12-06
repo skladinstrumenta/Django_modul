@@ -1,7 +1,28 @@
 {% extends "base.html" %}
 
 {%  block content %}
+    {% for message in messages %}
+        {% if message.tags == 'error' %}
+            <div><span><strong>{{ message }}</strong></span></div>
+        {% endif %}
+    {% endfor %}
     {% for purc in object_list %}
-        {{ purc.product.title }} x {{ purc.amount }}шт. = {{ purc.purchase_sum }}<br>
+        {{ purc.product.title }} x {{ purc.amount }}шт. = {{ purc.total }}<br><br>
+        {% if purc.return %}
+            <span>подана заявка на возврат <strong>{{ purc.date_of_purchase }}</strong></span>
+        {% else %}
+            {% if user.is_superuser %}
+                <h5>Пользователь {{ purc.user }} создал(а) заявку на возврат</h5>
+                <h5>ID пользователя {{ purc.user.pk }}</h5>
+            {% else %}
+                <form method="post" action="{% url 'return-purchase' purc.id %}">
+                    {% csrf_token %}
+                    {{ form }}
+                    <button type="submit">Return</button>
+                </form>
+            {% endif %}
+        {% endif %}
+        <hr>
+
     {% endfor %}
 {% endblock %}
