@@ -1,15 +1,25 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LogoutView, LoginView
 from django.db import transaction
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView
 
 from Eshop.forms import UserCreateForm, PurchaseCreateForm, ProductCreateForm, ReturnCreateForm
 from Eshop.models import Product, Purchase, MyUser, Return
+
+
+class SuperUserRequiredMixin(UserPassesTestMixin):
+
+    def test_func(self):
+        return self.request.user.is_superuser
+
+    def handle_no_permission(self):
+        return redirect('home')
 
 
 class UserCreateView(CreateView):
@@ -79,7 +89,7 @@ class BuyProductCreateView(CreateView):
 
 
 class PurchaseListView(LoginRequiredMixin, ListView):
-    login_url = '/'
+    login_url = 'login/'
     model = Purchase
     template_name = 'purchaselist.html'
 
@@ -91,8 +101,7 @@ class PurchaseListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class ProductCreateView(LoginRequiredMixin, CreateView):
-    login_url = 'login/'
+class ProductCreateView(SuperUserRequiredMixin, CreateView):
     template_name = 'createproduct.html'
     http_method_names = ['get', 'post']
     extra_context = {'create_form': ProductCreateForm()}
@@ -100,15 +109,15 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     success_url = '/'
 
 
-class ProductUpdate(LoginRequiredMixin, UpdateView):
-    login_url = 'login/'
+class ProductUpdate(SuperUserRequiredMixin, UpdateView):
     model = Product
     fields = ['title', 'text', 'price', 'image', 'amount']
     template_name = 'updateproduct.html'
     success_url = '/'
 
 
-class ReturnPurchaseCreateView(CreateView):
+class ReturnPurchaseCreateView(LoginRequiredMixin, CreateView):
+    login_url = 'login/'
     form_class = ReturnCreateForm
     template_name = "purchaselist.html"
     success_url = "/purchaselist"
@@ -141,7 +150,7 @@ class ReturnListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-class DeletePurchaseView(DeleteView):
+class DeletePurchaseView(SuperUserRequiredMixin, DeleteView):
     model = Purchase
     success_url = '/returnpurchaselist'
 
@@ -160,7 +169,7 @@ class DeletePurchaseView(DeleteView):
         return HttpResponseRedirect(self.success_url)
 
 
-class DeleteReturnView(DeleteView):
+class DeleteReturnView(SuperUserRequiredMixin, DeleteView):
     model = Return
     success_url = '/returnpurchaselist'
 

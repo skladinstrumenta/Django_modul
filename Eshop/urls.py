@@ -2,6 +2,7 @@ from django.urls import path
 from .views import UserCreateView, Login, ProductListView, BuyProductCreateView, PurchaseListView, Logout, \
     ProductCreateView, ProductUpdate, ReturnPurchaseCreateView, ReturnListView, DeletePurchaseView, DeleteReturnView
 
+
 urlpatterns = [
     path('', ProductListView.as_view(), name="home"),
     path('login/', Login.as_view(), name='login'),
