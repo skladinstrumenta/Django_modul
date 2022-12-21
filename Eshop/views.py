@@ -8,7 +8,9 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, ListView, DeleteView, UpdateView
+from rest_framework import viewsets
 
+from Eshop.api.serializers import ProductSerializer
 from Eshop.forms import UserCreateForm, PurchaseCreateForm, ProductCreateForm, ReturnCreateForm
 from Eshop.models import Product, Purchase, MyUser, Return
 

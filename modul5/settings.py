@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 # LOGOUT_REDIRECT_URL = 'index'
 
 AUTH_USER_MODEL = 'Eshop.MyUser'
-# Application definition
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Eshop',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
